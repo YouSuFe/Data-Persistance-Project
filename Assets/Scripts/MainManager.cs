@@ -8,17 +8,22 @@ public class MainManager : MonoBehaviour
 {
     public Brick BrickPrefab;
     public int LineCount = 6;
+    public int highScore = 0;
+    public string playerName;
+
     public Rigidbody Ball;
 
     public Text ScoreText;
+    public Text bestScoreText;
+    public Input playerNameInput;
     public GameObject GameOverText;
     
     private bool m_Started = false;
     private int m_Points;
     
     private bool m_GameOver = false;
-
     
+
     // Start is called before the first frame update
     void Start()
     {
@@ -36,6 +41,7 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
+        GetResults();
     }
 
     private void Update()
@@ -52,16 +58,34 @@ public class MainManager : MonoBehaviour
                 Ball.transform.SetParent(null);
                 Ball.AddForce(forceDir * 2.0f, ForceMode.VelocityChange);
             }
+            UpdateText();
         }
         else if (m_GameOver)
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                RestartGame();
             }
         }
     }
 
+    void UpdateText()
+    {
+        if(playerName != "" && highScore != 0)
+        {
+            bestScoreText.text = "High Score " + playerName + ": " + highScore;
+        }
+        else
+        {
+            bestScoreText.text = "You can Do it.";
+        }
+    }
+
+    void GetResults()
+    {
+        highScore = GameManager.Instance.bestScore;
+        playerName = GameManager.Instance.playerName;
+    }
     void AddPoint(int point)
     {
         m_Points += point;
@@ -72,5 +96,20 @@ public class MainManager : MonoBehaviour
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+        CheckHighScore();
+    }
+
+    void CheckHighScore()
+    {
+        if(m_Points > highScore)
+        {
+            GameManager.Instance.SaveScore(m_Points);
+            GameManager.Instance.LoadScore();
+        }
+    }
+
+    public void RestartGame()
+    {
+        SceneManager.LoadScene(0);
     }
 }
